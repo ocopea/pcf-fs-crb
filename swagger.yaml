@@ -1,0 +1,395 @@
+---
+swagger: '2.0'
+
+################################################################################
+#                              API Information                                 #
+################################################################################
+info:
+  title: pcf-fs-crb API
+  version: '0.1'
+  description: Crb-fs file-system Copy Service Broker provides a way to 
+               copy(store) data-stream associated with a copyId to a 
+               file-system and retrieve data-stream for a given copyId
+
+################################################################################
+#                  Host, Base Path, Schemes and Content Types                  #
+################################################################################
+host: localhost:8080
+basePath: /crb
+schemes:
+  - http
+consumes:
+  - application/json
+produces:
+  - application/json
+
+################################################################################
+#                                   Tags                                       #
+################################################################################
+tags:
+  - name: crb-web
+
+################################################################################
+#                                  Security                                    #
+################################################################################
+
+#todo
+
+################################################################################
+#                                   Parameters                                 #
+################################################################################
+parameters:
+  copyId:
+    name: copyId
+    in: path
+    description: The id of the copy instance.
+    type: string
+    required: true
+  copyInfo:
+    name: copyInfo
+    in: header
+    description: copyInfo is user provided metadata
+    required: false
+    type: string
+  copyData:
+    name: copyData
+    in: body
+    description: copy data as octet stream
+    required: true
+    schema: 
+      $ref: '#/definitions/InputStream'
+  repositoryInfo:
+    name: repositoryInfo
+    in: body
+    description: repository access info
+    required: true
+    schema:
+      $ref: '#/definitions/RepositoryInfo'
+
+################################################################################
+#                                           Paths                              #
+################################################################################
+paths:
+  /info:
+    get:
+      tags:
+        - crb-web
+      summary: Gets CRB info
+      description: Return crb-fs info
+      operationId: getInfo
+      parameters: []
+      responses:
+        200:
+          description: Successfully returned crb-fs info
+          schema:
+            $ref: '#/definitions/Info'
+        500:
+          description: Internal error
+          schema:
+            $ref: '#/definitions/error'
+        default:
+          description: unexpected error
+          schema:
+            $ref: '#/definitions/error'
+
+  /repositories:
+    get:
+      tags:
+          - crb-web
+      summary: Get info of (just one) repository managed by this CRB
+      description: Return a list of provisioned repositories (currently only one)
+      parameters: []
+      operationId: getRepositoryInfo
+      responses:
+        200:
+          description: Successful operation
+          schema:
+            $ref: '#/definitions/RepositoryInfo'
+        404:
+          description: No repositories content in Metadata-DB
+          schema:
+            $ref: '#/definitions/error'
+        500:
+          description: Internal error -- most likely Metadata-DB not accessible
+          schema:
+            $ref: '#/definitions/error'
+        default:
+          description: Unexpected error
+          schema:
+            $ref: '#/definitions/error'
+    post:
+      tags:
+          - crb-web
+      summary: Store info of (just one) repository managed by this CRB.
+      description: CRB currently handles only one filesystem repository and all 
+                   copies are stored in there. 
+      operationId: storeRepositoryInfo
+      parameters: 
+        - $ref: '#/parameters/repositoryInfo'
+      responses:
+        201:
+          description: Successfully created a filesystem repo info in 
+                       Metadata-DB 
+          schema:
+            $ref: '#/definitions/RepositoryInstance'
+        422:
+          description: Unprocessable Entity - Most likely either the addr or user
+                       fields are empty
+          schema:
+            $ref: '#/definitions/error'
+        500:
+          description: Internal error - Most likely Metadata-DB not accessible
+          schema:
+            $ref: '#/definitions/error'
+        default:
+          description: unexpected error
+          schema:
+            $ref: '#/definitions/error'
+  /copies/{copyId}/data:
+    post:
+      tags:
+        - crb-web
+      summary: Create copy -- store copy data
+      description: Store copy instance data in filesystem repo and create a 
+                   Metadata-DB entry for this copy
+      operationId: createCopy
+      consumes:
+        - application/octet-stream
+      produces:
+        - application/json
+      parameters:
+        - $ref: '#/parameters/copyId'
+        - $ref: '#/parameters/copyInfo'
+        - $ref: '#/parameters/copyData' 
+      responses:
+        201:
+          description: Successfully created a copy of the data and an entry in 
+                       the Metadata-DB
+          schema:
+            $ref: '#/definitions/CopyInstance'
+            description: Copy URL
+        403:
+          description: A copy instance with the same copyId exists. Either use 
+                       different copyId or delete existing copyId instance 
+                       before retrying
+          schema:
+            $ref: '#/definitions/error'
+        500:
+          description: Internal error. Data could not be copied to copy-repo or 
+                       copy instance metadata could not be created. If copy
+                       instance metadata can't be created, copy instance will be
+                       deleted
+          schema:
+            $ref: '#/definitions/error'
+        default:
+          description: Unexpected error
+          schema:
+            $ref: '#/definitions/error'
+    get:
+      tags:
+        - crb-web
+      summary: Retrieve copy data
+      description: Copy instance data is fetched from copy-repo and streamed back
+      operationId: retrieveCopy
+      consumes:
+        - application/json
+      produces:
+        - application/octet-stream
+      parameters:
+        - $ref: '#/parameters/copyId'
+      responses:
+        200:
+          description: Successfully retrieved copy instance data and streamed 
+                       back
+          schema:
+            $ref: '#/definitions/OutputStream'
+        500:
+          description: Internal error -- most likely access issue with copy-repo
+                       or with Metadata-DB
+          schema: 
+            $ref: '#/definitions/error'
+        default:
+          description: unexpected error
+          schema:
+            $ref: '#/definitions/error'
+  /copies:
+    get:
+      tags:
+      - crb-web
+      summary: List all the current copy instances.
+      description: Return copyIds from Metadata-DB
+      operationId: getCopyinstances
+      parameters: []
+      responses:
+        200:
+          description: Successfully listed copy instances managed by crb-fs 
+          schema:
+            type: array
+            items:
+              $ref: '#/definitions/CopyInstance'
+            description: copyId is currently used to access CopyInstance. 
+        500:
+          description: Internal error -- Most likely Metadata-DB could not be 
+                       accessed
+          schema:
+            $ref: '#/definitions/error'
+        default:
+          description: Unexpected error
+          schema:
+            $ref: '#/definitions/error'
+  /copies/{copyId}:
+    get:
+      tags:
+        - crb-web
+      summary: Get copy instance meta data
+      description: Return copy instance attributes
+      operationId: getCopyMetaData
+      parameters:
+        - $ref: '#/parameters/copyId'
+      responses:
+        200:
+          description: Successfuly returned copy instance attributes
+          schema:
+            $ref: '#/definitions/CopyMetaData'
+        500:
+          description: Internal error -- Most likely Metadata-DB could not be 
+                       accessed
+          schema:
+            $ref: '#/definitions/error'
+        default:
+          description: unexpected error
+          schema:
+            $ref: '#/definitions/error'
+    delete:
+      tags:
+        - crb-web
+      summary: Delete a copy data instance as well as its metadata
+      description: Delete copy instance of specified copyId along with its 
+                   metadata
+      operationId: deleteCopy
+      parameters:
+        - $ref: '#/parameters/copyId'
+      responses:
+        200:
+          description: Success - Successful operation
+          schema:
+            type: string
+        404:
+          description: Copy instance of specified copyId does not exist
+          schema:
+            $ref: '#/definitions/error'
+        500:
+          description: | 
+              Internal error -- Most likely Metadata-DB could not be accessed
+          schema:
+            $ref: '#/definitions/error'
+        default:
+          description: unexpected error
+          schema:
+            $ref: '#/definitions/error'
+            
+################################################################################
+#                               Definitions                                    #
+################################################################################
+definitions:
+  Info:
+    type: object
+    properties:
+      name:
+        type: string
+        description: crb-fs service name
+      version:
+        type: string
+        description: crb-fs microservice version
+      repoType:
+        type: string
+        description: Support filesystem copy Protocol
+    example:
+      name: crb-fs
+      version: '0.1'
+      repoType: file
+
+  error:
+    required:
+      - code
+      - message
+    properties:
+      code:
+        type: integer
+        format: int32
+      message:
+        type: string
+    example:
+      code: other than 500 that implementation may support -  e.g. 599
+      message: message for the error code - e.g., filesystem connection timeout
+
+  RepositoryInfo:
+    type: object
+    required:
+      - addr
+      - user
+    properties:
+      addr:
+        type: string
+        description: Copy Repository endpoint address
+      user:
+        type: string
+        description: User Name to login to repo
+      password:
+        type: string
+        description: user password. 
+    example:
+      addr: "1.2.3.4 or 1.2.3.4:8080 or a valid dns name ocopea.github.com "
+      user: Deago
+      password: DeagosPassword
+
+  CopyInstance:
+    type: object
+    description: copyURLs
+    properties:
+      copyURL:
+        type: string
+    example:
+      copyURL: http://<crb-fs-runtime-host>/copies/<copyId>
+
+  InputStream:
+    type: string
+    format: binary
+    description: Octet Stream
+
+  OutputStream:
+    type: string
+    format: binary
+    description: Octet Stream
+
+  CopyMetaData:
+    type: object
+    properties:
+      copyId:
+        type: string
+        description: Unique copy Id
+      copyTimeStamp:
+        type: string
+        description: Time when copy is initiated & completed in UTC
+        format: date-time
+      copySize:
+        type: integer
+        format: int64        
+        description: Size of copy instance (in Bytes)
+      copyDataURL:
+        type: string
+        description: Link to the location of the copy data
+    example:
+      copyId: UUIDValue
+      copyTimeStamp: 2017-03-09T13:06:08.260Z
+      copySize: 12345
+      copyDataURL: http://<crb-fs-runtime-host>/copies/<copyId>/data
+
+  RepositoryInstance:
+    type: object
+    description: copy repository URL
+    properties:
+      copyRepoURL:
+        type: string
+    example:
+      copyRepoURL: http://<crb-fs-runtime-host>/repositories
