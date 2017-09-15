@@ -13,4 +13,7 @@ CRB service provides capabilities such as:
 
 # API
 
-The functionality above is described using OpenAPI specification by [swagger.xml](https://github.com/ocopea/pcf-fs-crb/blob/master/swagger.yaml) through [Swagger framework](https://swagger.io).
+The functionality above is described using OpenAPI specification by [swagger.yaml](swagger.yaml) through [Swagger framework](https://swagger.io).
+
+# Functional Tests
+[functionaltests](/functionaltests) contains the functional tests that validate the functionality of the CRB using [REST API](swagger.yaml)
