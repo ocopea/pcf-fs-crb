@@ -1,0 +1,23 @@
+{
+    "package": {
+        "name": "pcf-fs-crb", // Bintray package name
+        "repo": "crb", // Bintray repository name
+        "subject": "ocopea", // Bintray organization
+        "website_url": "https://github.com/ocopea",
+        "issue_tracker_url": "",
+        "vcs_url": "https://github.com/ocopea/pcf-fs-crb",
+        "licenses": ["MIT"]
+    },
+
+    "version": {
+        "name":"1.0",
+        "desc": "",
+        "released": "2017-10-05",
+        "gpgSign": false
+    },
+
+    "files": [{"includePattern":"cmd/crb-server/crb-server", "uploadPattern": "crb-server-1.0", "matrixParams": {"override": true }},
+              {"includePattern":"./manifest.yml", "uploadPattern": "manifest-1.0.yml", "matrixParams": {"override": true }}],
+    "publish": true
+}
+
