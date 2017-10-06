@@ -1,0 +1,6 @@
+/.vscode
+/cmd/*
+/restapi/*
+!/restapi/configure_crb.go
+!/restapi/impl
+/models/*

@@ -1,0 +1,13 @@
+# Copyright (c) [2017] Dell Inc. or its subsidiaries. All Rights Reserved.
+---
+applications:
+- name: crb-server
+  memory: 1024M
+  buildpack: binary_buildpack
+  stack: cflinuxfs2
+  health-check-type: none
+  command: ./crb-server --host=
+  services:
+   - crb-mysql
+  env:
+   CRB_VERSION: 1.0

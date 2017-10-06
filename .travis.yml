@@ -1,0 +1,60 @@
+language: go
+
+go:
+  - 1.8
+
+env:
+  global:
+  - DESCRIPTOR="descriptor.json"
+  - MANIFEST="manifest.yml"
+  - SWAGGER_VERSION="0.9.0"
+
+install:
+  - ln -sf `pwd` $GOPATH/src/crb
+  - curl -o swagger -L'#' https://github.com/go-swagger/go-swagger/releases/download/$SWAGGER_VERSION/swagger_$(echo `uname`|tr '[:upper:]' '[:lower:]')_amd64
+  - chmod +x swagger
+  - ./swagger version
+  - cd $GOPATH/src/crb
+  - ./swagger generate server -f swagger.yaml -A crb
+  - go get github.com/tools/godep
+  - godep version
+  - godep restore  
+
+script:
+  - go install ./...
+  - go test ./...
+  - cd cmd/crb-server/
+  - go build
+  - cd $GOPATH/src/crb/
+
+deploy:
+  skip_cleanup: true
+  provider: bintray
+  user: $BINTRAY_USER
+  key:
+     secure: $BINTRAY_API_KEY
+  file: descriptor.json
+  on:
+    branches: master
+
+after_deploy:
+  - VERSION_IN_DESCRIPTOR=$(grep -A2 '"name"' descriptor.json | grep -o "[0-9]*\.[0-9]*")
+  - echo $VERSION_IN_DESCRIPTOR
+  - NEW_VERSION=$(echo "$VERSION_IN_DESCRIPTOR+0.1" | bc | awk '{printf "%.1f", $0}')
+  - echo $NEW_VERSION
+  - MATCH='s/\"name\"\:\s*\"'$VERSION_IN_DESCRIPTOR'\"/\"name\"\:\"'$NEW_VERSION'\"/'
+  - sed -i $MATCH $DESCRIPTOR
+  - MATCH='s/crb-server-'$VERSION_IN_DESCRIPTOR'/crb-server-'$NEW_VERSION'/'
+  - sed -i $MATCH $DESCRIPTOR
+  - MATCH='s/manifest-'$VERSION_IN_DESCRIPTOR'\.yml/manifest-'$NEW_VERSION'\.yml/'
+  - sed -i $MATCH $DESCRIPTOR
+  - cat $DESCRIPTOR
+  - VERSION_IN_MANIFEST=$(cat $MANIFEST | grep 'CRB_VERSION' | awk {'print $2'})
+  - MATCH='s/'$VERSION_IN_MANIFEST'/'$NEW_VERSION'/'
+  - sed -i $MATCH $MANIFEST
+  - cat $MANIFEST
+  - git checkout -B $TRAVIS_BRANCH
+  - git add $DESCRIPTOR
+  - git add $MANIFEST
+  - git commit -m "[ci skip] Updated descriptor and manifest files with new version $NEW_VERSION."
+  - git push origin $TRAVIS_BRANCH
