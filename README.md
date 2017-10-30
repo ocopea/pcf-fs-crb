@@ -1,5 +1,6 @@
-PCF File System CRB
+PCF File System CRB 
 ====
+[![Build](https://travis-ci.org/ocopea/pcf-fs-crb.svg?branch=master)](https://travis-ci.org/ocopea/pcf-fs-crb) [![Twitter URL](https://img.shields.io/twitter/url/http/shields.io.svg?style=social)](https://twitter.com/ocopea)
 
 # Overview
 
