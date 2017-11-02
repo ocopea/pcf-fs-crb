@@ -5,30 +5,30 @@
  * CRB is deployed and running on PCF.
 
 # Usage:
-The tests are executed using a [container](Dockerfile) which has the required test tools and the copy repository configured.
+The tests are executed using a Docker [container](Dockerfile) which has the required test tools and the Copy Repository configured.
 
-  * Build the docker image ocopea_crb_test_tool from the functionaltests folder. The image contains all the test tools, test scripts as well as acts as a copy repository for the tests.
-  Note: Feel free to change names and tags, and change the following commands accordingly
+  * Build the Docker image `ocopea_crb_test_tool` from the `functionaltests` folder. The image contains all the test tools, test scripts as well as acts as a Copy Repository for the tests.
+  **Note**: Feel free to change names and tags, and change the following commands accordingly.
   ```
   docker build -t ocopea_crb_test_tool .
   ```
 
-  * Find an unused port on the local host that will be used to forward traffic to the container's ssh port i.e. port 22. Ocopea's CRB service uses SFTP to securely transfer copies on this port.
-  
-  On windows or linux based machines to get the list of *used* local port, run
+  * Find an unused port on the local host that will be used to forward traffic to the container's SSH port i.e. port 22. Ocopea's CRB service uses SFTP to securely transfer copies on this port.
+
+  On Windows or Linux based machines to get the list of *used* local ports, run
   ```
   netstat -ap
   ```
   and accordingly choose an unused port for SSH forwarding. This port will be used in later commands.
 
-  * Run the docker container with name ocopea_crb_test_tool
+  * Run the Docker container with name `ocopea_crb_test_tool`
 
     * If using existing test scripts:
     ```
     docker run -d -p <ssh_fwd_port>:22 --name ocopea_crb_test_tool ocopea_crb_test_tool
     ```
 
-    * If testing new test scripts please use other docker options such as rebuilding the image, mounting the test folder or copy the new files to a running image. Here is an example on linux with mounted volume:
+    * If testing new test scripts please use other Docker options such as rebuilding the image, mounting the test folder or copying the new files to a running image. Here is an example on Linux with mounted volume:
     ```
     docker run -d -p <ssh_fwd_port>:22 -v $(pwd):/root/functionaltests/ --name ocopea_crb_test_tool ocopea_crb_test_tool
     ```
@@ -39,7 +39,7 @@ The tests are executed using a [container](Dockerfile) which has the required te
   ```
   **Note**:
 
-  * <crb_app_name> and <crb_app_url> are the name and url of the crb running in pcf. They can be retrieved by running
+  * `crb_app_name` and `crb_app_url` are the name and URL of the CRB running in PCF. They can be retrieved by running
   ```
   cf a
   ```
@@ -49,12 +49,13 @@ The tests are executed using a [container](Dockerfile) which has the required te
   crb-server   started           1/1         1G       1G     crb-server.cf.isus.emc.com
   ```
 
-  * <p-mysql_name>, <p-mysql_username>, <p-mysql_password> and <p-mysql_hostname> are the credentials of the p-mysql service which is bound to the crb app. They can be retrieved by running
+  * `p-mysql_name`, `p-mysql_username`, `p-mysql_password` and `p-mysql_hostname` are the credentials of the p-mysql service which is bound to the CRB app. They can be retrieved by running
   ```
   cf env <crb_app_name>
   ```
 
-  Here is an sample output:
+  Here is a sample output:
+
   ```
   System-Provided:
   {
@@ -74,21 +75,24 @@ The tests are executed using a [container](Dockerfile) which has the required te
      "name": "crb-mysql",
   ...
   }
-  ... 
+  ...
   ```
-  * <host_address> is the ip of the copy repo system.
-  * <ssh_fwd_port> is the port used for SSH forwarding.
-  * <pcf_api_endpoint> is the API end point of the PCF. This can be retrieved by running
+
+  * `host_address` is the IP of the Copy Repository system.
+  * `ssh_fwd_port` is the port used for SSH forwarding.
+  * `pcf_api_endpoint` is the API end point of the PCF. This can be retrieved by running
   ```
   cf t
   ```
-  Note: Do not include https:\\ or http:\\ in <pcf_api_endpoint>
-  * <pcf_username>, <pcf_password> are the credentials for pcf end point.
-  * <crb_app_version> is the version of the CRB. This can be retreived from the [manifest](../manifest.yml).
+  Note: Do not include `https://` or `http://` in `pcf_api_endpoint`
+  * `pcf_username`, `pcf_password` are the credentials for PCF end point.
+  * `crb_app_version` is the version of the CRB. This can be retrieved from the [manifest](../manifest.yml).
 
-  #### test output
-  A successfull test run should give an output as shown below
-  ```
+### Test Output
+
+  A successful test run should give an output as shown below
+
+```
   .testDeleteCopy : Posted Repo
   .testDeleteCopy : Posted Copy
   .testDeleteCopy : Deleted Copy
@@ -101,4 +105,5 @@ The tests are executed using a [container](Dockerfile) which has the required te
 
   Finished in 43.48 seconds
   86 tests, 209 assertions, 0 failures, 0 skipped
-  ```
+```
+
