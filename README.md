@@ -25,7 +25,7 @@ The functionality above is described using OpenAPI specification by [swagger.yam
 # How to build
 The CRB binary is built using a Docker [container](Dockerfile) which has the required build tools.
 
-* git clone https://github.com/ocopea/pcf-fs-crb.git CRB.
+* git clone https://github.com/ocopea/pcf-fs-crb.git crb.
 
   **Note**: You must name the destination folder crb as go uses folder names as package names.
 
